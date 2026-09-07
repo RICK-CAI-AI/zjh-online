@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>炸金花 · 好友联机</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--line:#e3e7eb;--txt:#1c2530;--sub:#6b7785;
+--felt:#1f7a4d;--felt2:#16603c;--gold:#c8a24a;--red:#d92b2b;--blk:#1c2530;
+--blue:#2563eb;--grey:#9aa4af;--r:12px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--txt);
+font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+font-size:15px;line-height:1.5;padding-bottom:230px}
+.wrap{max-width:780px;margin:0 auto;padding:12px}
+h1{font-size:20px;margin:6px 0 2px}
+h2{font-size:16px;margin:0 0 8px}
+.sub{color:var(--sub);font-size:12px;margin-bottom:10px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+label{display:block;font-size:12.5px;color:var(--sub);margin:10px 0 4px}
+input[type=text],input[type=number],select{width:100%;padding:10px;border:1px solid var(--line);
+border-radius:8px;font-size:16px;background:#fff;color:var(--txt);font-family:inherit}
+button{font-family:inherit;font-size:15px;border:1px solid var(--line);background:#fff;color:var(--txt);
+padding:11px 14px;border-radius:9px;cursor:pointer}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.42;cursor:not-allowed}
+.btn-p{background:var(--felt);border-color:var(--felt);color:#fff;font-weight:600}
+.btn-d{background:#fff;border-color:#e6bcbc;color:var(--red)}
+.btn-g{background:#eef1f4}
+.btn-sm{padding:7px 11px;font-size:13px;border-radius:7px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>div{flex:1;min-width:132px}
+
+.table{background:linear-gradient(160deg,var(--felt),var(--felt2));border-radius:var(--r);
+padding:12px;color:#fff;margin-bottom:12px}
+.tstats{display:flex;justify-content:space-around;text-align:center}
+.tstats b{display:block;font-size:20px;color:var(--gold);line-height:1.25}
+.tstats span{font-size:11px;opacity:.82}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:8px;margin-bottom:12px}
+.pc{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:9px}
+.pc.turn{border-color:var(--blue);box-shadow:0 0 0 2px rgba(37,99,235,.18)}
+.pc.folded{opacity:.5;background:#f2f4f6}
+.pc.out{opacity:.45;background:#f8f2f2}
+.pc.me{border-left:3px solid var(--gold)}
+.pc-top{display:flex;justify-content:space-between;align-items:center;gap:5px}
+.pname{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:82px}
+.pchips{font-size:12px;color:var(--sub);white-space:nowrap}
+.tag{font-size:10px;padding:1px 6px;border-radius:20px;border:1px solid var(--line);color:var(--sub);white-space:nowrap}
+.tag.w{color:#fff;background:var(--blue);border-color:var(--blue)}
+.tag.b{color:var(--sub);background:#eef1f4}
+.tag.f{color:#fff;background:var(--grey);border-color:var(--grey)}
+.tag.o{color:#fff;background:var(--red);border-color:var(--red)}
+.tag.d{color:#fff;background:var(--gold);border-color:var(--gold)}
+.cards{display:flex;gap:4px;margin:7px 0 5px;min-height:46px;align-items:center}
+.card{width:32px;height:44px;border-radius:5px;background:#fff;border:1px solid #cfd6dd;
+display:flex;flex-direction:column;align-items:center;justify-content:center;
+font-size:13px;font-weight:700;line-height:1.05;flex:1;max-width:34px}
+.card.red{color:var(--red)}.card.blk{color:var(--blk)}
+.card small{font-size:9px;font-weight:400;display:block}
+.card.back{background:repeating-linear-gradient(45deg,#2b6ea8,#2b6ea8 4px,#245f92 4px,#245f92 8px);border-color:#1d4f78}
+.card.ghost{background:#f0f3f6;border:1px dashed #c3ccd5;color:#9aa4af}
+.pbet{font-size:11px;color:var(--sub)}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#31c48d;margin-right:4px}
+.dot.off{background:#cbd2d9}
+
+.actionbar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);
+padding:10px 12px calc(10px + env(safe-area-inset-bottom));z-index:20;box-shadow:0 -2px 10px rgba(0,0,0,.05)}
+.act-inner{max-width:780px;margin:0 auto}
+.who{font-size:13px;margin-bottom:7px}
+.who b{color:var(--blue)}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+.btns button{flex:1;min-width:66px}
+.raisebox{display:flex;align-items:center;gap:8px;margin-top:8px}
+.raisebox input[type=number]{width:78px}
+.slider{flex:1}
+.hint{font-size:12px;color:var(--sub);margin-top:6px}
+
+.log{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;
+font-size:12.5px;max-height:180px;overflow:auto}
+.log div{padding:3px 0;border-bottom:1px dashed #eef1f4;color:#4a5563}
+.log div:last-child{border:0}
+
+.modal{position:fixed;inset:0;background:rgba(15,23,32,.55);display:flex;align-items:center;
+justify-content:center;z-index:60;padding:16px}
+.modal .box{background:#fff;border-radius:14px;padding:18px;max-width:420px;width:100%;max-height:82vh;overflow:auto}
+.modal h3{margin:0 0 6px;font-size:16px}
+.tgt{display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:6px;text-align:left}
+.hidden{display:none!important}
+.center{text-align:center}
+.pill{display:inline-block;background:#eef1f4;border-radius:20px;padding:2px 9px;font-size:11px;color:var(--sub);margin-left:6px}
+#toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:#1c2530;color:#fff;
+padding:9px 16px;border-radius:20px;font-size:13.5px;z-index:99;opacity:0;transition:.25s;pointer-events:none}
+#toast.on{opacity:1}
+.offline{background:#fff4e5;border:1px solid #f0d3a0;color:#8a5a00;padding:8px 12px;
+border-radius:9px;font-size:13px;margin-bottom:10px;text-align:center}
+details{margin-top:10px}
+summary{cursor:pointer;font-size:13px;color:var(--blue)}
+.rule{font-size:12.5px;color:#4a5563;line-height:1.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- 登录 -->
+<div id="login">
+  <h1>炸金花 · 好友联机 <span class="pill">最多 9 人</span></h1>
+  <div class="sub">每人自己手机打开这个页面进房 · 只能看到自己的牌 · 纯娱乐记分</div>
+  <div class="panel">
+    <label>房间号（几个人填一样的）</label>
+    <input type="text" id="iRoom" placeholder="例如 8888" autocomplete="off">
+    <label>你的昵称</label>
+    <input type="text" id="iName" placeholder="例如 老王" autocomplete="off" maxlength="8">
+    <button class="btn-p" style="width:100%;margin-top:16px" onclick="doJoin()">进入房间</button>
+  </div>
+  <div class="panel">
+    <details>
+      <summary>规则说明（点开给牌友统一认知）</summary>
+      <div class="rule" style="margin-top:8px">
+        <b>牌型</b>：豹子 &gt; 顺金 &gt; 金花 &gt; 顺子 &gt; 对子 &gt; 散牌；顺子 A23 最小、AKQ 最大。<br>
+        <b>闷牌</b>：闷家下注 = 看牌玩家的一半（看牌跟 2 分，闷牌只 1 分）。<br>
+        <b>看牌对闷牌</b>：看牌玩家跟闷牌玩家需付双倍；<b>看牌不能主动找闷牌比牌</b>，闷牌可以主动找看牌比。<br>
+        <b>比牌</b>：只能两两比，发起方付筹码，输家直接出局、牌销毁不公开；多人存活则不断两两比，淘汰到只剩一人。<br>
+        <b>血战到底</b>：弃牌 / 出局后不退出房间，留在桌上观战到本局结束。<br>
+        <b>开牌</b>：达到轮数上限或只剩一人时自动开牌，最大者收底池。
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- 房间 -->
+<div id="app" class="hidden">
+  <div id="offline" class="offline hidden">连接断开，正在重连…</div>
+
+  <div class="panel" style="display:flex;justify-content:space-between;align-items:center;padding:11px 14px">
+    <div>
+      <b id="hRoom"></b> <span class="pill" id="hName"></span>
+      <div class="sub" style="margin:2px 0 0" id="hHost"></div>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="btn-sm btn-g" onclick="copyInvite()">复制邀请</button>
+      <button class="btn-sm btn-g" onclick="leave()">退出</button>
+    </div>
+  </div>
+
+  <!-- 大厅 -->
+  <div id="lobby">
+    <div class="panel">
+      <h2>房间里的人（<span id="pCount">0</span>/9）</h2>
+      <div id="lobbyList"></div>
+    </div>
+    <div class="panel" id="cfgPanel">
+      <h2>玩法设置</h2>
+      <div class="row">
+        <div><label>底注（每人开局投）</label><input type="number" id="cAnte" value="1" min="1"></div>
+        <div><label>单注上限（闷牌单位）</label><input type="number" id="cMax" value="20" min="1"></div>
+      </div>
+      <div class="row">
+        <div><label>初始筹码</label><input type="number" id="cChips" value="200" min="1"></div>
+        <div><label>下注轮数上限</label><input type="number" id="cRound" value="4" min="1" max="20"></div>
+      </div>
+      <div class="row">
+        <div><label>比牌成本</label>
+          <select id="cCmp"><option value="1">补齐 + 再付一注（实战）</option><option value="0">仅补齐注额</option></select>
+        </div>
+        <div><label>特殊牌 235</label>
+          <select id="c235"><option value="0">不算特殊（默认）</option><option value="1">235 不同花 吃 豹子</option></select>
+        </div>
+      </div>
+      <label>筹码不足时</label>
+      <select id="cCredit"><option value="1">允许记负分（推荐，牌局不中断）</option><option value="0">只能全下 all-in</option></select>
+      <button class="btn-p" style="width:100%;margin-top:14px" id="btnStart" onclick="send({t:'start'})">开局</button>
+      <div class="sub" style="margin-top:8px" id="startTip"></div>
+    </div>
+  </div>
+
+  <!-- 牌桌 -->
+  <div id="table" class="hidden">
+    <div class="table">
+      <div class="tstats">
+        <div><b id="tPot">0</b><span>底池</span></div>
+        <div><b id="tBet">0</b><span>当前注（闷）</span></div>
+        <div><b id="tRound">1</b><span>下注轮</span></div>
+        <div><b id="tAlive">0</b><span>存活</span></div>
+      </div>
+    </div>
+
+    <div class="panel" style="padding:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <b style="font-size:14px">我的手牌</b>
+        <span class="sub" id="myRank" style="margin:0"></span>
+      </div>
+      <div class="cards" id="myCards" style="min-height:50px"></div>
+      <div class="sub" id="myTip" style="margin:6px 0 0"></div>
+      <div id="hostBtns" style="margin-top:10px;display:flex;gap:6px">
+        <button class="btn-sm btn-g" onclick="send({t:'reveal'})">公布所有牌</button>
+        <button class="btn-sm btn-g" onclick="send({t:'reset'})">重置筹码</button>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="panel" style="padding:10px 12px">
+      <b style="font-size:13px">牌局记录</b>
+      <div class="log" id="log" style="margin-top:8px;border:0;padding:0"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- 行动条 -->
+<div id="actionbar" class="actionbar hidden">
+  <div class="act-inner">
+    <div class="who" id="who"></div>
+    <div class="btns">
+      <button id="bSee" onclick="send({t:'act',a:'see'})">看牌</button>
+      <button id="bCall" class="btn-p" onclick="send({t:'act',a:'call'})">跟注</button>
+      <button id="bRaise" onclick="toggleRaise()">加注</button>
+      <button id="bCmp" onclick="openCompare()">比牌</button>
+      <button id="bFold" class="btn-d" onclick="send({t:'act',a:'fold'})">弃牌</button>
+    </div>
+    <div id="raisebox" class="raisebox hidden">
+      <input type="range" class="slider" id="rslider" min="1" max="20" value="2" oninput="syncR('s')">
+      <input type="number" id="ramount" value="2" oninput="syncR('n')">
+      <button class="btn-p btn-sm" onclick="doRaise()">确认</button>
+    </div>
+    <div class="hint" id="hint"></div>
+  </div>
+</div>
+
+<!-- 比牌弹窗 -->
+<div id="cmpModal" class="modal hidden">
+  <div class="box">
+    <h3>和谁比牌？</h3>
+    <div class="sub" id="cmpCost"></div>
+    <div id="cmpList" style="margin-top:10px"></div>
+    <button class="btn-g" style="width:100%;margin-top:14px" onclick="closeCmp()">取消</button>
+  </div>
+</div>
+
+<!-- 结算弹窗 -->
+<div id="endModal" class="modal hidden">
+  <div class="box center">
+    <h3 id="endTitle"></h3>
+    <div id="endBody" style="margin:10px 0"></div>
+    <button class="btn-p" style="width:100%" id="btnNext" onclick="send({t:'next'})">下一局</button>
+    <div class="sub" id="endTip" style="margin-top:8px"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const SUITS=['♠','♥','♣','♦'], RED=[false,true,false,true];
+const RT={2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10',11:'J',12:'Q',13:'K',14:'A'};
+let ws=null, V=null, PID=sessionStorage.getItem('zjh_pid')||'', ROOM=sessionStorage.getItem('zjh_room')||'';
+
+/* ---------- 连接 ---------- */
+const url=new URL(location.href);
+if(url.searchParams.get('room')) { ROOM=url.searchParams.get('room'); document.getElementById('iRoom').value=ROOM; }
+const savedName=localStorage.getItem('zjh_name')||'';
+document.getElementById('iName').value=savedName;
+
+function connect(){
+  const proto = location.protocol==='https:'?'wss':'ws';
+  ws = new WebSocket(proto+'://'+location.host);
+  ws.onopen=()=>{
+    document.getElementById('offline').classList.add('hidden');
+    if(PID && ROOM) ws.send(JSON.stringify({t:'join',room:ROOM,name:localStorage.getItem('zjh_name')||'',pid:PID}));
+  };
+  ws.onclose=()=>{
+    document.getElementById('offline').classList.remove('hidden');
+    setTimeout(()=>{ if(PID) connect(); },1500);
+  };
+  ws.onmessage=e=>{
+    const m=JSON.parse(e.data);
+    if(m.t==='you'){
+      PID=m.pid; ROOM=m.room;
+      sessionStorage.setItem('zjh_pid',PID); sessionStorage.setItem('zjh_room',ROOM);
+      document.getElementById('login').classList.add('hidden');
+      document.getElementById('app').classList.remove('hidden');
+    } else if(m.t==='state'){ V=m; render(); }
+    else if(m.t==='toast'){ toast(m.msg); }
+  };
+}
+function doJoin(){
+  const room=document.getElementById('iRoom').value.trim().toUpperCase();
+  const name=document.getElementById('iName').value.trim();
+  if(!room||!name) return toast('房间号和昵称都要填');
+  ROOM=room; localStorage.setItem('zjh_name',name);
+  PID=''; sessionStorage.removeItem('zjh_pid');
+  if(!ws || ws.readyState!==1) connect();
+  setTimeout(()=>ws && ws.readyState===1 && ws.send(JSON.stringify({t:'join',room:ROOM,name})),350);
+}
+function send(o){ if(ws&&ws.readyState===1) ws.send(JSON.stringify(o)); else toast('连接中…'); }
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('on');
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('on'),1900); }
+function leave(){ sessionStorage.clear(); location.reload(); }
+function copyInvite(){
+  const link=location.origin+'/?room='+V.room;
+  const txt=`炸金花开局啦！房间号 ${V.room}\n点链接直接进：${link}\n（电脑/手机浏览器打开都行）`;
+  if(navigator.clipboard) navigator.clipboard.writeText(txt).then(()=>toast('邀请已复制，发到群里吧'))
+    .catch(()=>prompt('复制这条发给好友：',txt));
+  else prompt('复制这条发给好友：',txt);
+}
+
+/* ---------- 渲染 ---------- */
+function cardsHTML(hand,n){
+  if(hand&&hand.length) return hand.map(c=>`<div class="card ${RED[c.s]?'red':'blk'}">${SUITS[c.s]}<small>${RT[c.r]}</small></div>`).join('');
+  const k=n||3; let s='';
+  for(let i=0;i<k;i++) s+='<div class="card back"></div>';
+  return s;
+}
+function render(){
+  if(!V) return;
+  const me=V.me, myTurn=(V.turnPid===me.pid && V.phase==='playing');
+  document.getElementById('hRoom').textContent='房间 '+V.room;
+  document.getElementById('hName').textContent=me.name;
+  document.getElementById('hHost').textContent=me.isHost?'你是房主（可开局/改设置）':'等待房主开局';
+
+  const isLobby = V.phase==='lobby';
+  document.getElementById('lobby').classList.toggle('hidden',!isLobby);
+  document.getElementById('table').classList.toggle('hidden',isLobby);
+  document.getElementById('actionbar').classList.toggle('hidden',isLobby&&true);
+  if(isLobby) document.getElementById('actionbar').classList.add('hidden');
+
+  if(isLobby){
+    document.getElementById('pCount').textContent=V.players.length;
+    document.getElementById('lobbyList').innerHTML=V.players.map(p=>
+      `<div class="pc-top" style="padding:7px 0;border-bottom:1px dashed #eef1f4">
+        <span><span class="dot ${p.connected?'':'off'}"></span><b>${p.name}</b>
+        ${p.host?'<span class="tag d">房主</span>':''}${p.pid===me.pid?'<span class="pill">我</span>':''}</span>
+        <span class="pchips">${p.chips} 分</span></div>`).join('');
+    const cfg=V.cfg;
+    document.getElementById('cAnte').value=cfg.ante; document.getElementById('cMax').value=cfg.maxbet;
+    document.getElementById('cChips').value=cfg.chips; document.getElementById('cRound').value=cfg.maxround;
+    document.getElementById('cCmp').value=cfg.cmpcost; document.getElementById('c235').value=cfg.r235;
+    document.getElementById('cCredit').value=cfg.credit;
+    const dis=!me.isHost;
+    ['cAnte','cMax','cChips','cRound','cCmp','c235','cCredit'].forEach(id=>document.getElementById(id).disabled=dis);
+    document.getElementById('btnStart').disabled=!me.isHost||V.players.length<2;
+    document.getElementById('startTip').textContent = me.isHost
+      ? (V.players.length<2?'至少 2 人才能开局':'开局后中途加入的人，下一局自动上桌')
+      : '只有房主能改设置和开局';
+    return;
+  }
+
+  /* 牌桌 */
+  document.getElementById('tPot').textContent=V.pot;
+  document.getElementById('tBet').textContent=V.curBet;
+  document.getElementById('tRound').textContent=V.round+'/'+V.cfg.maxround;
+  document.getElementById('tAlive').textContent=V.players.filter(p=>p.status==='active').length;
+  document.getElementById('hostBtns').classList.toggle('hidden',!me.isHost);
+
+  document.getElementById('myCards').innerHTML = me.hand
+    ? cardsHTML(me.hand)
+    : `<div class="card ghost">?</div><div class="card ghost">?</div><div class="card ghost">?</div>`;
+  document.getElementById('myRank').textContent = me.hand ? ('你的牌型：'+V.myRankName) : '';
+  document.getElementById('myTip').textContent = me.hand ? '' : '还没看牌 —— 点下方「看牌」才会亮牌（闷牌下注只需一半）';
+
+  const g=document.getElementById('grid'); g.innerHTML='';
+  V.players.forEach(p=>{
+    let cls='pc'+(p.pid===V.turnPid&&V.phase==='playing'?' turn':'');
+    if(p.status==='folded')cls+=' folded'; else if(p.status==='out')cls+=' out';
+    if(p.pid===me.pid)cls+=' me';
+    let tag = p.status==='folded'?'<span class="tag f">弃牌·观战</span>'
+      : p.status==='out'?'<span class="tag o">出局·观战</span>'
+      : p.status==='wait'?'<span class="tag b">下局上桌</span>'
+      : p.watching?'<span class="tag w">看牌</span>':'<span class="tag b">闷牌</span>';
+    if(p.pid===V.dealerPid) tag+=' <span class="tag d">庄</span>';
+    g.insertAdjacentHTML('beforeend',
+      `<div class="${cls}">
+        <div class="pc-top"><span class="pname"><span class="dot ${p.connected?'':'off'}"></span>${p.name}</span>
+          <span class="pchips">${p.chips} 分</span></div>
+        <div class="cards">${cardsHTML(p.hand,p.handCount)}</div>
+        <div class="pc-top">${tag}<span class="pbet">投入 ${p.totalBet}</span></div>
+        ${p.rankName?`<div class="pbet">${p.rankName}</div>`:''}
+      </div>`);
+  });
+
+  document.getElementById('log').innerHTML=V.log.map(l=>`<div>${l}</div>`).join('');
+
+  /* 行动条 */
+  const bar=document.getElementById('actionbar');
+  const pMe=V.players.find(x=>x.pid===me.pid);
+  if(V.phase!=='playing' || !pMe || pMe.status!=='active'){
+    bar.classList.add('hidden');
+  } else if(myTurn){
+    bar.classList.remove('hidden');
+    const dueAmt = pMe.watching?V.curBet*2:V.curBet;
+    const owed = Math.max(0,dueAmt-(V.me.roundBet||0));
+    document.getElementById('who').innerHTML=`轮到 <b>你</b> 操作 <span class="pill">${pMe.watching?'看牌':'闷牌'}</span>`;
+    document.getElementById('bCall').textContent = owed>0?`跟注 ${owed}`:'过牌';
+    document.getElementById('bSee').disabled=pMe.watching;
+    document.getElementById('bSee').textContent=pMe.watching?'已看牌':'看牌';
+    const sl=document.getElementById('rslider');
+    sl.min=V.curBet+1; sl.max=V.cfg.maxbet;
+    if(+sl.value<+sl.min) sl.value=sl.min;
+    if(+sl.value>+sl.max) sl.value=sl.max;
+    document.getElementById('ramount').value=sl.value;
+    document.getElementById('bRaise').disabled = V.curBet>=V.cfg.maxbet;
+    const targets=V.players.filter(x=>x.status==='active'&&x.pid!==me.pid&&!(pMe.watching&&!x.watching));
+    document.getElementById('bCmp').disabled=targets.length===0;
+    const extra=V.cfg.cmpcost?dueAmt:0;
+    document.getElementById('hint').textContent=
+      `当前注 ${V.curBet}（闷）｜你应付 ${dueAmt}｜还差 ${owed}｜比牌约 ${owed+extra}｜单注上限 ${V.cfg.maxbet}`;
+  } else {
+    bar.classList.add('hidden');
+    const cur=V.players.find(x=>x.pid===V.turnPid);
+    document.getElementById('hint').textContent='';
+    if(cur) document.getElementById('myTip').textContent += `　（等待 ${cur.name} 行动…）`;
+  }
+
+  /* 结算 */
+  const em=document.getElementById('endModal');
+  if(V.phase==='over'){ showEnd(); } else em.classList.add('hidden');
+}
+function showEnd(){
+  const r=V.result; if(!r) return;
+  document.getElementById('endTitle').textContent = r.winnerName==='无人' ? '本局流局' : `🏆 ${r.winnerName} 收 ${r.pot}`;
+  document.getElementById('endBody').innerHTML = r.hands.map(h=>
+    `<div style="margin:6px 0"><b>${h.name}</b> <span class="pill">${h.rankName}</span>
+     <div class="cards" style="justify-content:center">${cardsHTML(h.hand)}</div></div>`).join('')
+    || '<div class="sub">无人开牌</div>';
+  document.getElementById('btnNext').classList.toggle('hidden',!V.me.isHost);
+  document.getElementById('endTip').textContent = V.me.isHost?'':'等待房主开下一局…';
+  document.getElementById('endModal').classList.remove('hidden');
+}
+
+/* ---------- 交互 ---------- */
+function toggleRaise(){ const b=document.getElementById('raisebox'); b.classList.toggle('hidden'); }
+function syncR(from){
+  const s=document.getElementById('rslider'), n=document.getElementById('ramount');
+  if(from==='s') n.value=s.value;
+  else { let v=+n.value||1; const mx=+s.max,mn=+s.min; if(v<mn)v=mn; if(v>mx)v=mx; n.value=v; s.value=v; }
+}
+function doRaise(){
+  const v=+document.getElementById('ramount').value;
+  document.getElementById('raisebox').classList.add('hidden');
+  send({t:'act',a:'raise',v});
+}
+function openCompare(){
+  const me=V.players.find(x=>x.pid===V.me.pid);
+  const dueAmt=me.watching?V.curBet*2:V.curBet, extra=V.cfg.cmpcost?dueAmt:0;
+  document.getElementById('cmpCost').textContent=`本次比牌你将支付约 ${extra} 筹码（补齐注额${V.cfg.cmpcost?' + 一注比牌费':''}）｜输者出局、牌不公开`;
+  const list=V.players.filter(x=>x.status==='active'&&x.pid!==me.pid);
+  const c=document.getElementById('cmpList'); c.innerHTML='';
+  let any=false;
+  list.forEach(t=>{
+    if(me.watching&&!t.watching) return;
+    any=true;
+    const b=document.createElement('button'); b.className='tgt btn-g';
+    b.innerHTML=`<span>${t.name} <span class="tag ${t.watching?'w':'b'}">${t.watching?'看牌':'闷牌'}</span></span><span>比 →</span>`;
+    b.onclick=()=>{ closeCmp(); send({t:'act',a:'compare',target:t.pid}); };
+    c.appendChild(b);
+  });
+  if(!any){ const d=document.createElement('div'); d.className='sub';
+    d.textContent=me.watching?'你是看牌身份，不能主动找闷牌玩家比牌。可改为加注或跟注。':'暂无可比对象。'; c.appendChild(d); }
+  document.getElementById('cmpModal').classList.remove('hidden');
+}
+function closeCmp(){ document.getElementById('cmpModal').classList.add('hidden'); }
+
+/* 房主改设置：失焦即同步 */
+['cAnte','cMax','cChips','cRound','cCmp','c235','cCredit'].forEach(id=>{
+  document.getElementById(id).addEventListener('change',()=>{
+    if(!V||!V.me.isHost) return;
+    send({t:'cfg',cfg:{
+      ante:+document.getElementById('cAnte').value||1,
+      maxbet:+document.getElementById('cMax').value||20,
+      chips:+document.getElementById('cChips').value||200,
+      maxround:+document.getElementById('cRound').value||4,
+      cmpcost:+document.getElementById('cCmp').value,
+      r235:+document.getElementById('c235').value,
+      credit:+document.getElementById('cCredit').value
+    }});
+  });
+});
+
+connect();
+</script>
+</body>
+</html>
