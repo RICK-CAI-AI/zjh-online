@@ -1,0 +1,17 @@
+# Koyeb 部署配置（项目根目录放这个文件，Koyeb 会自动识别）
+name: zjh-online
+services:
+  - name: zjh-online
+    type: web
+    ports:
+      - port: 8080
+        protocol: http
+    routes:
+      - path: /
+    health_checks:
+      - port: 8080
+        path: /
+        initial_delay: 5
+    env:
+      - name: NODE_ENV
+        value: production
